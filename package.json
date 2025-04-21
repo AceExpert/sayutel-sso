@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "eciesjs": "^0.4.14",
     "express": "^5.1.0"
   },
   "scripts": {
