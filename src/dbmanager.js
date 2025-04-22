@@ -1,14 +1,16 @@
 const sqlite = require("node:sqlite");
 
-const userDB = new sqlite.DatabaseSync("users.db");
-const sessionDB = new sqlite.DatabaseSync("sessions.db")
-const authDB = new sqlite.DatabaseSync("auth.db")
+const userDB = new sqlite.DatabaseSync("_tests/db/users.db");
+const sessionDB = new sqlite.DatabaseSync("_tests/db/sessions.db")
+const authDB = new sqlite.DatabaseSync("_tests/db/auth.db")
 
-let auth_q = userDB.prepare("SELECT passwd from users WHERE user_id=?;")
-
-let new_session_q = sessionDB.prepare("INSERT INTO sessions (token, key, public_key) VALUES (?, ?, ?);")
+userDB.exec("CREATE TABLE if not exists users(user_id, passwd, domains);")
+sessionDB.exec("CREATE TABLE if not exists sessions(token, key, public_key);")
+authDB.exec("CREATE TABLE if not exists users(token, user_ids);")
 
 function loginUser(user, passwd) {
+    let auth_q = userDB.prepare("SELECT passwd from users WHERE user_id=?;");
+
     let pwd = auth_q.get(user)
 
     if(pwd) {
@@ -19,10 +21,13 @@ function loginUser(user, passwd) {
 }
 
 function createEncSession(token, key, public_key) {
+    let new_session_q = sessionDB.prepare("INSERT INTO sessions (token, key, public_key) VALUES (?, ?, ?);")
+    
     new_session_q.run(token, key, public_key);
 }
 
 function getEncSession(token) {
+    if(!token) return null;
     let session_q = sessionDB.prepare("SELECT key, public_key from sessions WHERE token=?;")
 
     return session_q.get(token)
@@ -52,6 +57,7 @@ function createSession(token, user, newToken) {
 }
 
 function getSession(token) {
+    if(!token) return null;
     let auth_q = authDB.prepare("SELECT user_ids from users WHERE token=?;")
 
     let info = auth_q.get(token);
