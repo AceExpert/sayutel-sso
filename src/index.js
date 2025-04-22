@@ -13,26 +13,26 @@ app.post('/session', (req, res, next) => {
 
     let key = new ecc.PrivateKey();
     createEncSession(token, key.secret.toString('base64'), req.body)
-    res.send(key.publicKey.toBytes().toString('base64'))
+    res.send(Buffer.from(key.publicKey.toBytes()).toString('base64'))
 })
 
 app.post('/login', (req, res, next) => {
     let cookies = getCookies(req.cookies);
 
     let session = getEncSession(cookies.find(v => v.name === 'sesstoken'))
+    let currentToken = cookies.find(v => v.name === 'token')
 
     if(!session) {
         res.json({error: 2, msg: "Invalid session"})
         return
     }
-    let data = JSON.parse(decrypt(res.body, session.key))
+    let data = JSON.parse(decrypt(req.body, session.key))
     if(loginUser(data.user, data.pswd)) {
-        let token = genToken(256);
-        createSession(token, data.user);
+        let [sessCode, token] = createSession(currentToken, data.user, genToken(256));
         res.cookie("token", token, {httpOnly: true, secure: true, maxAge: 3600 * 1000 * 24 * 30})
-        res.body(encrypt(JSON.stringify({error: 0, auth: true}), session.public_key));
+        res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
     } else {
-        res.body(encrypt(JSON.stringify({error: 1, msg: 'wrong username or password', auth: false}), session.public_key));
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'wrong username or password', auth: false}), session.public_key));
     }
 })
 
@@ -44,7 +44,7 @@ app.post('/auth', (req, res, next) => {
         res.json({error: 2, msg: "Invalid session"})
         return
     }
-    
+
     let uids = getSession(cookies.find(v => v.name === 'token'))
     
     if(uids) {

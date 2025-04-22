@@ -5,7 +5,7 @@ function decrypt(data, key) {
 }
 
 function encrypt(data, key) {
-    return ecc.encrypt(Buffer.from(key, 'base64'), Buffer.from(data))
+    return ecc.encrypt(Buffer.from(key, 'base64'), Buffer.from(data)).toString('base64')
 }
 
 module.exports = {

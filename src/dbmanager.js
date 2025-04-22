@@ -23,27 +23,32 @@ function createEncSession(token, key, public_key) {
 }
 
 function getEncSession(token) {
-    let session_q = sessionDB.prepare("SELECT key from sessions WHERE token=?;")
+    let session_q = sessionDB.prepare("SELECT key, public_key from sessions WHERE token=?;")
 
     return session_q.get(token)
 }
 
-function createSession(token, user) {
+function createSession(token, user, newToken) {
+    
     let auth_q = authDB.prepare("SELECT user_ids from users WHERE token=?;")
 
-    let info = auth_q.get(token);
+    let info = token? auth_q.get(token) : null;
     let uids = [user]
 
-    if(info?.user_ids?.length) {
-        if (info.user_ids.includes(user)) {
-            return 2
+    if(info) {
+        let user_ids = JSON.parse(info.user_ids);
+        if (user_ids.includes(user)) {
+            return [3, token]
         } else {
-            uids += info.user_ids;
+            uids += user_ids;
+            authDB.prepare("UPDATE users SET user_ids=?, token=? WHERE token=?;").run(JSON.stringify(uids), newToken, token);
+            return [2, newToken]
         }
+    } else {
+        authDB.prepare("INSERT INTO users (token, user_ids) VALUES (?, ?);").run(newToken, JSON.stringify(uids));
+        return [1, newToken];
     }
 
-    authDB.prepare("INSERT INTO users (token, user_ids) VALUES (?, ?);").run(token, uids);
-    return 1;
 }
 
 function getSession(token) {
@@ -51,10 +56,16 @@ function getSession(token) {
 
     let info = auth_q.get(token);
 
-    if(!info?.user_ids?.length) {
-        return null
+    if(info) {
+        let user_ids = JSON.parse(info.user_ids);
+        if(user_ids?.length) {
+            return user_ids;
+        } else {
+            authDB.prepare("DELETE FROM users WHERE token=?;").run(token);
+            return null
+        }
     } else {
-        return info.user_ids
+        return null
     }
 }
 
