@@ -19,13 +19,14 @@ let resolveCookies = (req, res, next) => {
     next();
 }
 
-app.post('/session', rawMiddlware, 
+app.post('/session', rawMiddlware, resolveCookies, 
     (req, res, next) => {
-        let token = genToken(50);
-        res.cookie("sesstoken", token, { httpOnly: true, secure: true })
+        let token = req.cookies.find(v => v.name === 'sesstoken')?.value;
 
         let key = new ecc.PrivateKey();
-        createEncSession(token, key.secret.toString('base64'), req.body)
+        let ftoken = createEncSession(genToken(55), key.secret.toString('base64'), req.body, token)
+
+        res.cookie("sesstoken", ftoken, { httpOnly: true, secure: true })
         res.send(Buffer.from(key.publicKey.toBytes()).toString('base64'))
     }
 )

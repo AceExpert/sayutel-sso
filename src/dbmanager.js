@@ -20,10 +20,16 @@ function loginUser(user, passwd) {
     }
 }
 
-function createEncSession(token, key, public_key) {
+function createEncSession(token, key, public_key, check) {
+    if(check) {
+        if (sessionDB.prepare("UPDATE sessions SET token=?, key=?, public_key=? WHERE token=?;").run(token, key, public_key, check).changes) {
+            return token;
+        };
+    };
     let new_session_q = sessionDB.prepare("INSERT INTO sessions (token, key, public_key) VALUES (?, ?, ?);")
-    
+
     new_session_q.run(token, key, public_key);
+    return token;
 }
 
 function getEncSession(token) {

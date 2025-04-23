@@ -20,6 +20,7 @@ class Cookie {
 }
 
 function getCookies(cookie) {
+    if(!cookie) return [];
     let cookies = [];
 
     let current = {name: '', value: '', extraVal: ''};
