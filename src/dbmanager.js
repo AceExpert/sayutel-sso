@@ -81,6 +81,29 @@ function getSession(token) {
     }
 }
 
+function validateUserId(email) {
+    let [user, domain] = email.split('@');
+
+    let user_info = userDB.prepare("SELECT domains from users WHERE user_id=?").get(user);
+
+    if(user_info) {
+        if(user_info.domains) {
+            let domains = JSON.parse(user_info.domains);
+            if (domains.includes(domain)) {
+                return 1;
+            } else {
+                return 2;
+            }
+        } else if (['sayutel.com', 'sputh.me', 'sharedvibes.in', 'cyshul.com'].includes(domain)) {
+            return 1;
+        } else {
+            return 2;
+        }
+    } else {
+        return 0;
+    }
+}
+
 module.exports = {
-    loginUser, createEncSession, getEncSession, createSession, getSession
+    loginUser, createEncSession, getEncSession, createSession, getSession, validateUserId
 }

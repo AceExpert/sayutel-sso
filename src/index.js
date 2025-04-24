@@ -1,9 +1,16 @@
 const express = require("express");
 const ecc = require("eciesjs");
 
-const { loginUser, createEncSession, getEncSession, createSession, getSession } = require("./dbmanager");
+const { 
+    loginUser, 
+    createEncSession, getEncSession, 
+    createSession, getSession,
+    validateUserId,
+} = require("./dbmanager");
 const { genToken, getCookies } = require("./utils");
 const { decrypt, encrypt } = require("./crypt");
+
+const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z0-9\-]+\.)?[a-zA-Z0-9\-]+/;
 
 let app = express();
 
@@ -19,6 +26,17 @@ let resolveCookies = (req, res, next) => {
     next();
 }
 
+let validateEncSession = (req, res, next) => {
+    let session = getEncSession(req.cookies.find(v => v.name === 'sesstoken')?.value)
+    
+    if(!session) {
+        res.json({error: 2, msg: "Invalid session"})
+        return;
+    };
+    req.sessionInfo = session;
+    next();
+}
+
 app.post('/session', rawMiddlware, resolveCookies, 
     (req, res, next) => {
         let token = req.cookies.find(v => v.name === 'sesstoken')?.value;
@@ -31,16 +49,12 @@ app.post('/session', rawMiddlware, resolveCookies,
     }
 )
 
-app.post('/login', rawMiddlware, resolveCookies, (req, res, next) => {
+app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
     let cookies = req.cookies;
 
-    let session = getEncSession(cookies.find(v => v.name === 'sesstoken')?.value)
+    let session = req.sessionInfo;
     let currentToken = cookies.find(v => v.name === 'token')?.value
 
-    if(!session) {
-        res.json({error: 2, msg: "Invalid session"})
-        return
-    }
     let data = JSON.parse(decrypt(req.body, session.key))
     if(loginUser(data.user, data.pswd)) {
         let [sessCode, token] = createSession(currentToken, data.user, genToken(256));
@@ -51,14 +65,10 @@ app.post('/login', rawMiddlware, resolveCookies, (req, res, next) => {
     }
 })
 
-app.post('/auth', resolveCookies, (req, res, next) => {
+app.post('/auth', resolveCookies, validateEncSession, (req, res, next) => {
     let cookies = req.cookies;
 
-    let session = getEncSession(cookies.find(v => v.name === 'sesstoken')?.value)
-    if(!session) {
-        res.json({error: 2, msg: "Invalid session"})
-        return
-    }
+    let session = req.sessionInfo;
 
     let uids = getSession(cookies.find(v => v.name === 'token')?.value)
     
@@ -66,6 +76,27 @@ app.post('/auth', resolveCookies, (req, res, next) => {
         res.send(encrypt(JSON.stringify(uids), session.public_key))
     } else {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid token', auth: false}), session.public_key));
+    }
+})
+
+app.post('/validate', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let session = req.sessionInfo;
+
+    let data = decrypt(req.body, session.key).trim();
+
+    if(!emailPat.test(data)) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'not a valid email'}), session.public_key))
+        return;
+    }
+
+    let result = validateUserId(data);
+
+    if(result === 2) {
+        res.send(encrypt(JSON.stringify({error: 3, msg: 'not a valid domain'}), session.public_key))
+    } else if (result === 1) {
+        res.send(encrypt(JSON.stringify({error: 0}), session.public_key))
+    } else if (result === 0) {
+        res.send(encrypt(JSON.stringify({error: 2, msg: 'not a valid user'}), session.public_key))
     }
 })
 
