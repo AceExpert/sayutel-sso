@@ -15,7 +15,11 @@ const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?
 let app = express();
 
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', ['http://cybertron:3500', 'https://accounts.sayutel.com']);
+    if(['http://cybertron:3500', 'https://accounts.sayutel.com'].includes(req.headers.origin)) {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    } else {
+        res.setHeader('Access-Control-Allow-Origin', 'https://accounts.sayutel.com');
+    }
     res.setHeader('Access-Control-Allow-Credentials', 'true')
     res.setHeader('X-Powered-By', 'Sayutel')
     next()
@@ -32,6 +36,8 @@ let resolveCookies = (req, res, next) => {
     req.cookies = getCookies(req.headers['cookie']);
     next();
 }
+
+let secureCookie = origin => origin === 'http://cybertron:3500' ? undefined : true
 
 let validateEncSession = (req, res, next) => {
     let session = getEncSession(req.cookies.find(v => v.name === 'sesstoken')?.value)
@@ -51,7 +57,7 @@ app.post('/session', rawMiddlware, resolveCookies,
         let key = new ecc.PrivateKey();
         let ftoken = createEncSession(genToken(55), key.secret.toString('base64'), req.body, token)
 
-        res.cookie("sesstoken", ftoken, { httpOnly: true, /*secure: true*/ })
+        res.cookie("sesstoken", ftoken, { httpOnly: true, secure: secureCookie(req.headers.origin) })
         res.send(Buffer.from(key.publicKey.toBytes()).toString('base64'))
     }
 )
@@ -65,7 +71,7 @@ app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, 
     let data = JSON.parse(decrypt(req.body, session.key))
     if(loginUser(data.user, data.pswd)) {
         let [sessCode, token] = createSession(currentToken, data.user, genToken(256));
-        res.cookie("token", token, {httpOnly: true, /*secure: true,*/ maxAge: 3600 * 1000 * 24 * 30})
+        res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30})
         res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
     } else {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'wrong username or password', auth: false}), session.public_key));
