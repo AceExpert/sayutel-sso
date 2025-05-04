@@ -1,13 +1,16 @@
 const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+const digits = '0123456789'
 
-function genToken(len = 256) {
+function genToken(len = 256, charset = chars) {
     let token = '';
     
     for(let i = 0; i < len; i++) {
-        token += chars[Math.round(Math.random() * chars.length)]
+        token += charset[Math.round(Math.random() * charset.length)]
     }
     return token
 }
+
+let genOTP = (len = 6) => genToken(len, digits);
 
 class Cookie {
     name = null;
@@ -72,5 +75,5 @@ function getCookies(cookie) {
 }
 
 module.exports = {
-    genToken, getCookies
+    genToken, getCookies, genOTP
 }

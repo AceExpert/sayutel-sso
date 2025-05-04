@@ -6,6 +6,8 @@ const {
     createEncSession, getEncSession, 
     createSession, getSession,
     validateUserId,
+    getUser, createUser,
+    verifyUser
 } = require("./dbmanager");
 const { genToken, getCookies } = require("./utils");
 const { decrypt, encrypt } = require("./crypt");
@@ -69,8 +71,10 @@ app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, 
     let currentToken = cookies.find(v => v.name === 'token')?.value
 
     let data = JSON.parse(decrypt(req.body, session.key))
-    if(loginUser(data.user, data.pswd)) {
-        let [sessCode, token] = createSession(currentToken, data.user, genToken(256));
+    let user = getUser(data.user);
+
+    if(user.passwd === data.pswd) {
+        let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : user.user_id + '@' + user.domain, genToken(256));
         res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30})
         res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
     } else {
@@ -92,21 +96,62 @@ app.post('/auth', resolveCookies, validateEncSession, (req, res, next) => {
     }
 })
 
+app.post('/create', resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
+    let session = req.sessionInfo;
+
+    let data = JSON.parse(decrypt(req.body, session.key));
+
+    if(validateUserId(data.user)) {
+        res.send(encrypt(JSON.stringify({error: 2, msg: 'user exists'}), session.public_key));
+    } else {
+        if(!emailPat.test(data.user)) {
+            res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'})));
+            return;
+        };
+        let vtoken = genToken(25);
+        let result = createUser(data.user, {token: vtoken});
+        if(result === 3) {
+            res.send(encrypt(JSON.stringify({error: 0, result: 1, otp: vtoken}, session.public_key)))
+        } else if (result === 2) {
+
+        } else if (result === 1) {
+            res.send(encrypt(JSON.stringify({error: 2, msg: 'user exists'}), session.public_key));
+        }
+    }
+})
+
+app.post('/verify', resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
+    let session = req.sessionInfo;
+
+    let data = JSON.parse(decrypt(req.body, session.key));
+
+    let result = verifyUser(data.token, data.otp);
+    if(result === 0) {
+        res.send(encrypt(JSON.stringify({error: 0, msg: 'verified'}), session.public_key))
+    } else if (result === 1) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'wrong otp'}), session.public_key))
+    } else if (result === 2) {
+        res.send(encrypt(JSON.stringify({error: 2, msg: 'invalid session'}), session.public_key))
+    }
+})
+
 app.post('/validate', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
     let session = req.sessionInfo;
 
     let data = decrypt(req.body, session.key).trim();
 
     if(!emailPat.test(data)) {
-        res.send(encrypt(JSON.stringify({error: 1, msg: 'not a valid email'}), session.public_key))
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
         return;
     }
 
     let result = validateUserId(data);
 
-    if(result === 2) {
-        res.send(encrypt(JSON.stringify({error: 3, msg: 'not a valid domain'}), session.public_key))
-    } else if (result === 1) {
+    if (result === 1) {
         res.send(encrypt(JSON.stringify({error: 0}), session.public_key))
     } else if (result === 0) {
         res.send(encrypt(JSON.stringify({error: 2, msg: 'not a valid user'}), session.public_key))
