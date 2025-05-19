@@ -61,7 +61,7 @@ app.post('/session', rawMiddlware, resolveCookies,
         let key = new ecc.PrivateKey();
         let ftoken = createEncSession(genToken(55), key.secret.toString('base64'), req.body, token)
 
-        res.cookie("sesstoken", ftoken, { httpOnly: true, secure: secureCookie(req.headers.origin) })
+        res.cookie("sesstoken", ftoken, { httpOnly: true, secure: secureCookie(req.headers.origin), sameSite: "none" })
         res.send(Buffer.from(key.publicKey.toBytes()).toString('base64'))
     }
 )
@@ -77,7 +77,7 @@ app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, 
 
     if(user?.passwd === data.pswd) {
         let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : user.user_id + '@' + user.domain, genToken(256));
-        res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30})
+        res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30, sameSite: "none"})
         res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
     } else {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'wrong username or password', auth: false}), session.public_key));
