@@ -2,10 +2,12 @@ const sqlite = require("node:sqlite");
 
 const { genOTP } = require("./utils");
 
-const userDB = new sqlite.DatabaseSync("_tests/db/users.db");
-const sessionDB = new sqlite.DatabaseSync("_tests/db/sessions.db")
-const authDB = new sqlite.DatabaseSync("_tests/db/auth.db")
-const verifyDB = new sqlite.DatabaseSync("_tests/db/verify.db")
+const dbDir = "/home/db/"
+
+const userDB = new sqlite.DatabaseSync(dbDir + "users.db");
+const sessionDB = new sqlite.DatabaseSync(dbDir + "sessions.db")
+const authDB = new sqlite.DatabaseSync(dbDir + "auth.db")
+const verifyDB = new sqlite.DatabaseSync(dbDir + "verify.db")
 
 userDB.exec("CREATE TABLE if not exists users(user_id, passwd, domain, dom_alias, phone, country_code);")
 sessionDB.exec("CREATE TABLE if not exists sessions(token, key, public_key);")

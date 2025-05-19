@@ -12,12 +12,14 @@ const {
 const { genToken, getCookies } = require("./utils");
 const { decrypt, encrypt } = require("./crypt");
 
+const { addWisher } = require("./extensions/waitlist");
+
 const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z0-9\-]+\.)?[a-zA-Z0-9\-]+/;
 
 let app = express();
 
 app.use((req, res, next) => {
-    if(['http://cybertron:3500', 'https://accounts.sayutel.com'].includes(req.headers.origin)) {
+    if(['http://cybertron:3500', 'http://cybertron:3000', 'https://accounts.sayutel.com', 'https://cytroid.in'].includes(req.headers.origin)) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     } else {
         res.setHeader('Access-Control-Allow-Origin', 'https://accounts.sayutel.com');
@@ -39,7 +41,7 @@ let resolveCookies = (req, res, next) => {
     next();
 }
 
-let secureCookie = origin => origin === 'http://cybertron:3500' ? undefined : true
+let secureCookie = origin => origin.startsWith('http://cybertron') ? undefined : true
 
 let validateEncSession = (req, res, next) => {
     let session = getEncSession(req.cookies.find(v => v.name === 'sesstoken')?.value)
@@ -73,7 +75,7 @@ app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, 
     let data = JSON.parse(decrypt(req.body, session.key))
     let user = getUser(data.user);
 
-    if(user.passwd === data.pswd) {
+    if(user?.passwd === data.pswd) {
         let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : user.user_id + '@' + user.domain, genToken(256));
         res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30})
         res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
@@ -156,6 +158,23 @@ app.post('/validate', rawMiddlware, resolveCookies, validateEncSession, (req, re
     } else if (result === 0) {
         res.send(encrypt(JSON.stringify({error: 2, msg: 'not a valid user'}), session.public_key))
     }
+})
+
+app.post('/cytroid/wishlist/join', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let session = req.sessionInfo;
+
+    let data = decrypt(req.body, session.key).trim();
+
+    if(!emailPat.test(data)) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
+        return;
+    }
+
+    if(addWisher(data)) {
+        res.send(encrypt(JSON.stringify({error: 0, msg: 'joined'}), session.public_key))
+    } else {
+        res.send(encrypt(JSON.stringify({error: 2, msg: 'exists already'}), session.public_key))
+    };
 })
 
 app.listen(5100, () => {
