@@ -2,7 +2,7 @@ const sqlite = require("node:sqlite");
 
 const { genOTP } = require("./utils");
 
-const dbDir = "/home/db/"
+const dbDir = "/home/db/sayutel/"
 
 const userDB = new sqlite.DatabaseSync(dbDir + "users.db");
 const sessionDB = new sqlite.DatabaseSync(dbDir + "sessions.db")
@@ -14,8 +14,8 @@ sessionDB.exec("CREATE TABLE if not exists sessions(token, key, public_key);")
 authDB.exec("CREATE TABLE if not exists users(token, user_ids);")
 verifyDB.exec("CREATE TABLE if not exists users(token, email, phone, otp);")
 
-let doms = ['sayutel.com', 'sputh.me', 'cyshul.com']
-let reserved = ['cytroid.in', 'sharedvibes.in']
+let doms = ['sputh.me']
+let reserved = ['cytroid.in', 'sharedvibes.in', 'sayutel.com', 'cyshul.com']
 
 function loginUser(userid, passwd) {
     let [user, domain] = userid.split('@');
@@ -133,7 +133,7 @@ function getUser(email, phone) {
     if (email) {
         let [user, domain] = email.split('@');
         if(!domain) {
-            domain = 'sayutel.com';
+            domain = 'sputh.me';
         }
         let user_info = userDB.prepare("SELECT passwd, domain, dom_alias from users WHERE user_id=?;").all(user);
     

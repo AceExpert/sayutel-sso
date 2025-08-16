@@ -105,13 +105,14 @@ app.post('/create', resolveCookies, validateEncSession, (req, res, next) => {
 
     let data = JSON.parse(decrypt(req.body, session.key));
 
+    if(!emailPat.test(data.user)) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'})));
+        return;
+    };
+
     if(validateUserId(data.user)) {
         res.send(encrypt(JSON.stringify({error: 2, msg: 'user exists'}), session.public_key));
     } else {
-        if(!emailPat.test(data.user)) {
-            res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'})));
-            return;
-        };
         let vtoken = genToken(25);
         let result = createUser(data.user, {token: vtoken});
         if(result === 3) {
