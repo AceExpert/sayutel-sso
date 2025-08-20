@@ -19,7 +19,7 @@ const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?
 let app = express();
 
 app.use((req, res, next) => {
-    if(['http://cybertron:3500', 'http://cybertron:3000', 'https://accounts.sayutel.com', 'https://cytroid.in'].includes(req.headers.origin)) {
+    if(['http://cybertron:3500', 'http://cybertron:3000', 'https://accounts.sayutel.com', 'https://cytroid.in', 'https://www.cytroid.in'].includes(req.headers.origin)) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     } else {
         res.setHeader('Access-Control-Allow-Origin', 'https://accounts.sayutel.com');
