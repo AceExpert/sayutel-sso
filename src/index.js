@@ -77,7 +77,8 @@ app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, 
     let user = getUser(data.user);
 
     if(user?.passwd === data.pswd) {
-        let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : (user.user_id + '@' + user.domain), genToken(256));
+        // let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : (user.user_id + '@' + user.domain), genToken(256));
+        let [sessCode, token] = createSession(currentToken, user.user_id + '@' + user.domain, genToken(256));
         res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30, sameSite: "none", domain: ".sayutel.com"})
         res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
     } else {

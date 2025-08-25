@@ -135,7 +135,7 @@ function getUser(email, phone) {
         if(!domain) {
             domain = 'sputh.me';
         }
-        let user_info = userDB.prepare("SELECT passwd, domain, dom_alias from users WHERE user_id=?;").all(user);
+        let user_info = userDB.prepare("SELECT user_id, passwd, domain, dom_alias from users WHERE user_id=?;").all(user);
     
         if(user_info.length) {
             for(let users of user_info) {
