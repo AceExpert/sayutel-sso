@@ -181,6 +181,8 @@ app.post('/cytroid/wishlist/join', rawMiddlware, resolveCookies, validateEncSess
 })
 
 app.get('/mail/:u/access', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
     let session = req.sessionInfo;
 
     let uids = getSession(cookies.find(v => v.name === 'token')?.value)
