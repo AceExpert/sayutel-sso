@@ -13,13 +13,14 @@ const { genToken, getCookies } = require("./utils");
 const { decrypt, encrypt } = require("./crypt");
 
 const { addWisher } = require("./extensions/waitlist");
+const sputhmail = require("./extensions/sputhmail");
 
 const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z0-9\-]+\.)?[a-zA-Z0-9\-]+/;
 
 let app = express();
 
 app.use((req, res, next) => {
-    if(['http://cybertron:3500', 'http://cybertron:3000', 'https://accounts.sayutel.com', 'https://cytroid.in', 'https://www.cytroid.in'].includes(req.headers.origin)) {
+    if(['http://cybertron:3500', 'http://cybertron:3000', 'https://accounts.sayutel.com', 'https://cytroid.in', 'https://www.cytroid.in', 'https://sputh.me', 'https://www.sputh.me', 'https://mail.sayutel.com'].includes(req.headers.origin)) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     } else {
         res.setHeader('Access-Control-Allow-Origin', 'https://accounts.sayutel.com');
@@ -61,7 +62,7 @@ app.post('/session', rawMiddlware, resolveCookies,
         let key = new ecc.PrivateKey();
         let ftoken = createEncSession(genToken(55), key.secret.toString('base64'), req.body, token)
 
-        res.cookie("sesstoken", ftoken, { httpOnly: true, secure: secureCookie(req.headers.origin), sameSite: "none" })
+        res.cookie("sesstoken", ftoken, { httpOnly: true, secure: secureCookie(req.headers.origin), sameSite: "none", domain: ".sayutel.com" })
         res.send(Buffer.from(key.publicKey.toBytes()).toString('base64'))
     }
 )
@@ -76,8 +77,8 @@ app.post('/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, 
     let user = getUser(data.user);
 
     if(user?.passwd === data.pswd) {
-        let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : user.user_id + '@' + user.domain, genToken(256));
-        res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30, sameSite: "none"})
+        let [sessCode, token] = createSession(currentToken, emailPat.test(data.user) ? data.user : (user.user_id + '@' + user.domain), genToken(256));
+        res.cookie("token", token, {httpOnly: true, secure: secureCookie(req.headers.origin), maxAge: 3600 * 1000 * 24 * 30, sameSite: "none", domain: ".sayutel.com"})
         res.send(encrypt(JSON.stringify({error: 0, auth: true, extra: sessCode}), session.public_key));
     } else {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'wrong username or password', auth: false}), session.public_key));
@@ -176,6 +177,26 @@ app.post('/cytroid/wishlist/join', rawMiddlware, resolveCookies, validateEncSess
     } else {
         res.send(encrypt(JSON.stringify({error: 2, msg: 'exists already'}), session.public_key))
     };
+})
+
+app.get('/mail/:u/access', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let session = req.sessionInfo;
+
+    let uids = getSession(cookies.find(v => v.name === 'token')?.value)
+    let uindex = Number.parseInt(req.params.u);
+    
+    if(uids) {
+        let user = uids[uindex];
+        if(user) {
+            let ntok = genToken(128);
+            sputhmail.addUser(user, ntok);
+            res.send(encrypt(JSON.stringify({error: 0, msg: 'ws token', token: ntok}), session.public_key));
+        } else {
+            res.send(encrypt(JSON.stringify({error: 2, msg: 'invalid user'}), session.public_key));
+        }
+    } else {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid token', auth: false}), session.public_key));
+    }
 })
 
 app.listen(5100, () => {
