@@ -14,6 +14,7 @@ const { decrypt, encrypt } = require("./crypt");
 
 const { addWisher } = require("./extensions/waitlist");
 const sputhmail = require("./extensions/sputhmail");
+const shaleen = require("./extensions/shaleen");
 
 const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z0-9\-]+\.)?[a-zA-Z0-9\-]+/;
 
@@ -200,6 +201,28 @@ app.get('/mail/:u/access', rawMiddlware, resolveCookies, validateEncSession, (re
     } else {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid token', auth: false}), session.public_key));
     }
+})
+
+app.post('/shaleen/contact', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
+    let session = req.sessionInfo;
+
+    let data = JSON.parse(decrypt(req.body, session.key).trim());
+
+    if(!emailPat.test(data.email)) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
+        return;
+    }
+
+    let res = shaleen.sendMail(data);
+
+    if(!res) {
+        res.send(encrypt(JSON.stringify({error: 0, msg: 'sent'}), session.public_key));
+    } else {
+        
+    }
+
 })
 
 app.listen(5100, () => {
