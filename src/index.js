@@ -21,7 +21,11 @@ const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?
 let app = express();
 
 app.use((req, res, next) => {
-    if(['http://cybertron:3500', 'http://cybertron:3000', 'https://accounts.sayutel.com', 'https://cytroid.in', 'https://www.cytroid.in', 'https://sputh.me', 'https://www.sputh.me', 'https://mail.sayutel.com'].includes(req.headers.origin)) {
+    if(['http://cybertron:3500', 'http://cybertron:3000',
+        'http://localhost:3012',
+        'https://accounts.sayutel.com', 
+        'https://cytroid.in', 'https://www.cytroid.in', 'https://sputh.me', 'https://www.sputh.me', 'https://mail.sayutel.com', 
+        'https://www.shaleen.net', 'https://shaleen.net'].includes(req.headers.origin)) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     } else {
         res.setHeader('Access-Control-Allow-Origin', 'https://accounts.sayutel.com');
@@ -220,7 +224,7 @@ app.post('/shaleen/contact', rawMiddlware, resolveCookies, validateEncSession, (
     if(!res) {
         res.send(encrypt(JSON.stringify({error: 0, msg: 'sent'}), session.public_key));
     } else {
-        
+
     }
 
 })
