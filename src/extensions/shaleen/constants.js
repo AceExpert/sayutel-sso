@@ -37,7 +37,7 @@ const contactHTML = (name, email, message) =>  `
 
                 <p style="color: maroon; padding: 0px; box-sizing: border-box; margin: 20px 5px 0px 5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500; font-size: 14px; align-self: center; text-align: center;">You can directly reply to this mail to reply to them</p>
 
-                <a style="margin: 40px 0px 0px 0px; display: flex; box-sizing: border-box; padding: 0px; flex-direction: column; align-items: center; text-decoration: none;" href="https://shaleen.net/">
+                <a style="margin: 40px 0px 0px 0px; box-sizing: border-box; padding: 0px; align-items: center; text-decoration: none;" href="https://shaleen.net/">
                     <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 487 487" fill="none">
                         <circle cx="243.5" cy="243.5" r="220" stroke="maroon" stroke-width="0"/>
                         <path d="M133 242C133 365 150 403.5 245.5 444.5C341 403.5 355 365 355 242" stroke="maroon" stroke-width="8" stroke-linecap="round"/>
@@ -121,7 +121,7 @@ const contactRHTML = (name, email, message) => `
 
                 <p style="color: maroon; padding: 0px; box-sizing: border-box; margin: 20px 5px 0px 5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 500; font-size: 14px; align-self: center; text-align: center;">You cannot reply to this mail. It is just a receipt</p>
 
-                <a style="margin: 40px 0px 0px 0px; display: flex; box-sizing: border-box; padding: 0px; flex-direction: column; align-items: center; text-decoration: none;" href="https://shaleen.net/">
+                <a style="margin: 40px 0px 0px 0px; box-sizing: border-box; padding: 0px; align-items: center; text-decoration: none;" href="https://shaleen.net/">
                     <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 487 487" fill="none">
                         <circle cx="243.5" cy="243.5" r="220" stroke="maroon" stroke-width="0"/>
                         <path d="M133 242C133 365 150 403.5 245.5 444.5C341 403.5 355 365 355 242" stroke="maroon" stroke-width="8" stroke-linecap="round"/>
