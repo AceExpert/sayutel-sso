@@ -47,7 +47,7 @@ let resolveCookies = (req, res, next) => {
     next();
 }
 
-let secureCookie = origin => origin.startsWith('http://cybertron') || origin.startsWith('http://localhost') ? undefined : true
+let secureCookie = origin => (origin.startsWith('http://cybertron') || origin.startsWith('http://localhost')) ? undefined : true
 
 let validateEncSession = (req, res, next) => {
     let session = getEncSession(req.cookies.find(v => v.name === 'sesstoken')?.value)
