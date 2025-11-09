@@ -5,7 +5,7 @@ function genToken(len = 256, charset = chars) {
     let token = '';
     
     for(let i = 0; i < len; i++) {
-        token += charset[Math.round(Math.random() * charset.length)]
+        token += charset[Math.round(Math.random() * (charset.length - 1))]
     }
     return token
 }
