@@ -219,9 +219,9 @@ app.post('/shaleen/contact', rawMiddlware, resolveCookies, validateEncSession, (
         return;
     }
 
-    let res = shaleen.sendMail(data);
+    let resp = shaleen.sendMail(data);
 
-    if(!res) {
+    if(!resp) {
         res.send(encrypt(JSON.stringify({error: 0, msg: 'sent'}), session.public_key));
     } else {
 
