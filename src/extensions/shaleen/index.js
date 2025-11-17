@@ -7,10 +7,11 @@ function sendMail({name, email, message}) {
         '-f', 'sayu@shaleen.net', 
         '-t', 'very.anshul@gmail.com', 
         '--to-name', 'Shaleen Singh', 
+        '--headers', `Reply-To: ${name} <${email}>`,
         '-s', `Contact Request from ${name} through shaleen.net`,
         '--html', contactHTML(name, email, message),
         '-m', `Dear Shaleen\nSomeone named ${name} has sent you a message through your website to contact you. The details are given below.\n\nYou can directly reply to this email to reply to them.\n\nName:\n${name}\n\nEmail:\n${email}\n\nMessage:\n${message}\n\n__________________`,
-        '--name', 'shaleen.net',
+        '--name', `${name} (via shaleen.net)`,
         '--sign', 'sayutel.com',
         '--no-save'
     ])
