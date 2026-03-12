@@ -15,6 +15,7 @@ const { decrypt, encrypt } = require("./crypt");
 const { addWisher } = require("./extensions/waitlist");
 const sputhmail = require("./extensions/sputhmail");
 const shaleen = require("./extensions/shaleen");
+const sv = require("./extensions/sharedvibes");
 
 const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z0-9\-]+\.)?[a-zA-Z0-9\-]+/;
 
@@ -228,6 +229,65 @@ app.post('/shaleen/contact', rawMiddlware, resolveCookies, validateEncSession, (
     }
 
 })
+
+app.post('/presv/otp', rawMiddlware, (req, res, next) => {
+    let em = req.body;
+
+    if(!emailPat.test(em)) {
+        res.send(JSON.stringify({error: 1, msg: 'invalid email'}));
+        return;
+    }
+
+    let sTok = genToken();
+    res.send(JSON.stringify({error: 0, msg: 'sent', token: sTok}));
+    let otp = sv.sendOTP(em, sTok);
+})
+
+app.post('/presv/login', rawMiddlware, (req, res, next) => {
+    let data = JSON.parse(req.body);
+
+    if(sv.verifyOTP(data.otp, data.token)) {
+        res.send(JSON.stringify({error: 0, msg: 'success'}));
+    } else {
+        res.send(JSON.stringify({error: 1, msg: 'incorrect'}));
+    }
+})
+
+app.post('/sv/otp', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+    let sessToken = cookies.find(v => v.name === 'sesstoken')?.value
+
+    let session = req.sessionInfo;
+
+    let em = decrypt(req.body, session.key).trim();
+
+    if(!emailPat.test(em)) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
+        return;
+    }
+
+    let otp = sv.sendOTP(em, sessToken);
+    res.send(encrypt(JSON.stringify({error: 0, msg: 'sent'}), session.public_key));
+})
+
+app.post('/sv/login', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+    let sessToken = cookies.find(v => v.name === 'sesstoken')?.value
+
+    let session = req.sessionInfo;
+
+    let otpPass = decrypt(req.body, session.key).trim();
+
+    if(!emailPat.test(em)) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
+        return;
+    }
+
+    let otp = sv.sendOTP(em, sessToken);
+    res.send(encrypt(JSON.stringify({error: 0, msg: 'sent'}), session.public_key));
+})
+
+
 
 app.listen(5100, () => {
     console.log("Sayutel SSO Service is live @ localhost:5100");
