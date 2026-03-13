@@ -230,29 +230,6 @@ app.post('/shaleen/contact', rawMiddlware, resolveCookies, validateEncSession, (
 
 })
 
-app.post('/presv/otp', rawMiddlware, (req, res, next) => {
-    let em = req.body;
-
-    if(!emailPat.test(em)) {
-        res.send(JSON.stringify({error: 1, msg: 'invalid email'}));
-        return;
-    }
-
-    let sTok = genToken();
-    res.send(JSON.stringify({error: 0, msg: 'sent', token: sTok}));
-    let otp = sv.sendOTP(em, sTok);
-})
-
-app.post('/presv/login', rawMiddlware, (req, res, next) => {
-    let data = JSON.parse(req.body);
-
-    if(sv.verifyOTP(data.otp, data.token)) {
-        res.send(JSON.stringify({error: 0, msg: 'success'}));
-    } else {
-        res.send(JSON.stringify({error: 1, msg: 'incorrect'}));
-    }
-})
-
 app.post('/sv/otp', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
     let cookies = req.cookies;
     let sessToken = cookies.find(v => v.name === 'sesstoken')?.value
