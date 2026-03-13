@@ -1,3 +1,4 @@
+const sqlite = require("node:sqlite");
 const { spawn } = require('node:child_process');
 const { genOTP } = require('../../utils');
 
