@@ -14,5 +14,5 @@ function generateKeys() {
 }
 
 module.exports = {
-    decrypt, encrypt
+    decrypt, encrypt, generateKeys
 }

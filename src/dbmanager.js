@@ -129,7 +129,7 @@ function getSession(token) {
     }
 };
 
-function getUser(email, phone) {
+function getUser(email) {
     if (email) {
         let [user, domain] = email.split('@');
         if(!domain) {
@@ -148,8 +148,6 @@ function getUser(email, phone) {
         } else {
             return null;
         }
-    } else if (phone) {
-        return userDB.prepare("SELECT * from users WHERE phone=?;").get(phone);
     }
 }
 
