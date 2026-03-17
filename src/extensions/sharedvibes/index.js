@@ -39,7 +39,7 @@ function verifyOTP(otp, session) {
         }
         authDB.prepare("INSERT INTO users (uid, email, token) VALUES (?, ?, ?);").run(uid, otpSession.email, tok);
         delete otpRecord[session];
-        return [tok, uid];
+        return [tok, !user? {uid: uid, email: otpSession.email} : user];
     } else {
 
     }

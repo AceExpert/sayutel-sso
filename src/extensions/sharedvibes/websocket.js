@@ -63,14 +63,17 @@ wss.on("connection", (ws, req) => {
 
                 case 2: {
                     let req_cl = getClient(fdata.uid);
-
-                    acceptFriendRequest(client.uid, fdata.user_id, fdata.uid, fdata.accept);
+                    nsent = false;
 
                     if(req_cl) {
                         req_cl.ws.send(encrypt(JSON.stringify({'type': 2, 'data': client.user_info, 'accept': fdata.accept}), client.public_key))
+                        nsent = true;
                     } else {
 
                     }
+
+                    acceptFriendRequest(client.uid, fdata.user_id, fdata.uid, fdata.accept, nsent);
+
                     break;
                 }
 
