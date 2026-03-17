@@ -255,10 +255,10 @@ app.post('/sv/login', rawMiddlware, resolveCookies, validateEncSession, (req, re
 
     let otpPass = decrypt(req.body, session.key).trim();
 
-    let [v, uid] = sv.verifyOTP(otpPass, sessToken);
+    let [v, udata] = sv.verifyOTP(otpPass, sessToken);
     if(v) {
         res.cookie("svtoken", v, {sameSite: "none"});
-        res.send(encrypt(JSON.stringify({error: 0, msg: 'success', uid: uid}), session.public_key));
+        res.send(encrypt(JSON.stringify({error: 0, msg: 'success', data: udata}), session.public_key));
     } else {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'incorrect'}), session.public_key));
     }
