@@ -4,7 +4,7 @@ const sqlite = require("node:sqlite");
 let {WSClient} = require("./models");
 let {encrypt, decrypt, generateKeys} = require("../../crypt");
 
-let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest} = require("./dbmanager");
+let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest} = require("./db");
 
 let wss = new WebSocketServer({
     port: 4200,

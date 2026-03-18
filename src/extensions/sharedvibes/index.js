@@ -5,7 +5,7 @@ const {
     authDB, friendsDB, userDB, 
     getAuthUser, getUser, getRelatedUserList,
     createUserID
-} = require("./dbmanager");
+} = require("./db");
 
 let otpRecord = {};
 
