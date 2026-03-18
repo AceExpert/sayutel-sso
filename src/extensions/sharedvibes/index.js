@@ -1,5 +1,5 @@
 const { spawn } = require('node:child_process');
-const { genOTP, genToken } = require('../../../utils');
+const { genOTP, genToken } = require('../../utils');
 
 const {
     authDB, friendsDB, userDB, 
