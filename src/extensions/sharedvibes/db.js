@@ -1,4 +1,4 @@
-const sqlite = require("node:sqlite");
+import sqlite from "node:sqlite";
 
 const dbDir = "/home/db/sharedvibes/"
 const userDB = new sqlite.DatabaseSync(dbDir + "users.db");
