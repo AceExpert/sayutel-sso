@@ -33,7 +33,7 @@ function verifyOTP(otp, session) {
     if(otpSession?.otp === otp) {
         let tok = genToken(256);
         let user = getUser(otpSession.email);
-        let uid = user.uid || createUserID()
+        let uid = user?.uid || createUserID()
         if(!user) {
             userDB.prepare("INSERT INTO users (uid, email) VALUES (?, ?);").run(uid, otpSession.email);
         }
