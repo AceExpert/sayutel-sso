@@ -15,7 +15,7 @@ const { decrypt, encrypt } = require("./crypt");
 const { addWisher } = require("./extensions/waitlist");
 const sputhmail = require("./extensions/sputhmail");
 const shaleen = require("./extensions/shaleen");
-const sv = require("./extensions/sharedvibes");
+const sv = require("./extensions/sharedvibes/src");
 
 const emailPat =  /[a-zA-Z0-9\$%\-#&\.]+@(?:[a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(?:[a-zA-Z0-9\-]+\.)?[a-zA-Z0-9\-]+/;
 
