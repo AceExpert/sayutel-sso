@@ -9,8 +9,14 @@ userDB.exec("CREATE TABLE if not exists users(uid, user_id, email, display_name,
 friendsDB.exec("CREATE TABLE if not exists friends(uid, fid, rid, notif);")
 authDB.exec("CREATE TABLE if not exists users(uid, user_id, email, token);")
 
-function getUser(email) {
-    let rec = userDB.prepare("SELECT * from users where email=?;").get(email);
+function getUser(email, userid) {
+    let rec = null;
+
+    if(email) {
+        rec = userDB.prepare("SELECT * from users where email=?;").get(email);
+    } else {
+        rec = userDB.prepare("SELECT * from users where user_id=?;").get(userid);
+    }
     return rec;
 }
 
@@ -18,6 +24,13 @@ function getAuthUser(token) {
     let rec = authDB.prepare("SELECT * from users where token=?;").get(token);
     return rec;
 }
+
+function setUser(uid, {name, user_id, about, avatar}) {
+    if(!name && !user_id && !about && !avatar) return;
+    userDB.prepare(`UPDATE users SET ${name? ("display_name=?" + ((user_id || about)? ', ' : ' ')) : " "}${user_id? "user_id=?" + (about? ', ' : ' ') : " "}${about? "about=? " : " "}WHERE uid=?;`)
+        .run(...([name, user_id, about, uid].filter(v => v)));
+    return 1
+} 
 
 function getRelatedUserList(uid, type = 0) {
     switch(type) {
@@ -61,4 +74,4 @@ function createUserID() {
     return Math.round(Math.random() * 1000000000 + 10000)
 }
 
-export {userDB, friendsDB, authDB, getAuthUser, getUser, getRelatedUserList, createUserID, sendFriendRequest, acceptFriendRequest}
+export {userDB, friendsDB, authDB, getAuthUser, getUser, getRelatedUserList, createUserID, sendFriendRequest, acceptFriendRequest, setUser}

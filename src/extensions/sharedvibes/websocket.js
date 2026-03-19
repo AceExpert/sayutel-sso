@@ -4,7 +4,7 @@ const sqlite = require("node:sqlite");
 let {WSClient} = require("./models");
 let {encrypt, decrypt, generateKeys} = require("../../crypt");
 
-let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest} = require("./db");
+let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest, setUser} = require("./db");
 
 let wss = new WebSocketServer({
     port: 4200,
@@ -15,6 +15,10 @@ let clients = [];
 function getClient(uid, user_id) {
     return clients.find(cl => uid? (cl.uid === uid) : (cl.user_id === user_id));
 }
+
+wss.on("listening", () => {
+    console.log("WS listening at port 4200");
+})
 
 wss.on("connection", (ws, req) => {
     
@@ -88,6 +92,10 @@ wss.on("connection", (ws, req) => {
                     } else if (fdata.group_id) {
 
                     }
+                }
+
+                case 4: {
+                    setUser(client.uid, fdata.data);
                 }
             }
         }

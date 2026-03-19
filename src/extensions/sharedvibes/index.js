@@ -7,6 +7,8 @@ const {
     createUserID
 } = require("./db");
 
+const {} = require("./websocket");
+
 let otpRecord = {};
 
 function sendOTP(email, session) {
@@ -47,5 +49,5 @@ function verifyOTP(otp, session) {
 
 module.exports = {
     otpRecord,
-    sendOTP, verifyOTP, getRelatedUserList
+    sendOTP, verifyOTP, getRelatedUserList, getUser
 }

@@ -264,6 +264,70 @@ app.post('/sv/login', rawMiddlware, resolveCookies, validateEncSession, (req, re
     }
 })
 
+app.post('/sv/user/check', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
+    let session = req.sessionInfo;
+
+    let username = decrypt(req.body, session.key).toLowerCase().trim();
+
+    let v = sv.getUser(null, username);
+
+    if(v) {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'exists'}), session.public_key));
+    } else {
+        res.send(encrypt(JSON.stringify({error: 0, msg: 'success'}), session.public_key));
+    }
+})
+
+app.post('/sv/profile/update', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+    let sessToken = cookies.find(v => v.name === 'sesstoken')?.value
+
+    let session = req.sessionInfo;
+
+    let otpPass = decrypt(req.body, session.key).trim();
+
+    let [v, udata] = sv.verifyOTP(otpPass, sessToken);
+    if(v) {
+        res.cookie("svtoken", v, {sameSite: "none"});
+        res.send(encrypt(JSON.stringify({error: 0, msg: 'success', data: udata}), session.public_key));
+    } else {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'incorrect'}), session.public_key));
+    }
+})
+
+app.post('/sv/user/get', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
+    let session = req.sessionInfo;
+
+    let username = decrypt(req.body, session.key).toLowerCase().trim();
+
+    let v = sv.getUser(null, username);
+
+    if(v) {
+        res.send(encrypt(JSON.stringify({error: 0, data: v}), session.public_key));
+    } else {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'does not exist'}), session.public_key));
+    }
+})
+
+app.post('/sv/user/set', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
+    let cookies = req.cookies;
+
+    let session = req.sessionInfo;
+
+    let username = decrypt(req.body, session.key).toLowerCase().trim();
+
+    let v = sv.getUser(null, username);
+
+    if(v) {
+        res.send(encrypt(JSON.stringify({error: 0, data: v}), session.public_key));
+    } else {
+        res.send(encrypt(JSON.stringify({error: 1, msg: 'does not exist'}), session.public_key));
+    }
+})
 
 
 app.listen(5100, () => {
