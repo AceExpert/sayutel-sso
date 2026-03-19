@@ -55,7 +55,7 @@ wss.on("connection", (ws, req) => {
                     let nsent = false;
 
                     if(req_cl) {
-                        req_cl.ws.send(encrypt(JSON.stringify({'type': 1, 'data': client.user_info, 'send': fdata.send}), client.public_key))
+                        req_cl.ws.send(encrypt(JSON.stringify({'type': 1, 'data': client.user_info, 'send': fdata.send}), req_cl.public_key))
                         nsent = true;
                     } else {
 
@@ -71,7 +71,7 @@ wss.on("connection", (ws, req) => {
                     nsent = false;
 
                     if(req_cl) {
-                        req_cl.ws.send(encrypt(JSON.stringify({'type': 2, 'data': client.user_info, 'accept': fdata.accept}), client.public_key))
+                        req_cl.ws.send(encrypt(JSON.stringify({'type': 2, 'data': client.user_info, 'accept': fdata.accept}), req_cl.public_key))
                         nsent = true;
                     } else {
 
@@ -86,7 +86,7 @@ wss.on("connection", (ws, req) => {
                     if(fdata.uid) {
                         let cl = getClient(fdata.uid);
                         if(cl) {
-                            cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), client.public_key))
+                            cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), cl.public_key))
                         } else {
 
                         }
