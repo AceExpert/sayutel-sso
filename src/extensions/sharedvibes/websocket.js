@@ -23,6 +23,7 @@ wss.on("listening", () => {
 wss.on("connection", (ws, req) => {
     
     let client = new WSClient({ws: ws});
+    clients.push(client);
 
     ws.on("message", data => {
         if(!client.public_key) {

@@ -302,7 +302,7 @@ app.post('/sv/user/get', rawMiddlware, resolveCookies, validateEncSession, (req,
 
     let session = req.sessionInfo;
 
-    let username = decrypt(req.body, session.key).toLowerCase().trim();
+    let userQ = JSON.parse(decrypt(req.body, session.key));
 
     let v = sv.getUser(null, username);
 
