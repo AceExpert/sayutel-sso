@@ -23,6 +23,7 @@ wss.on("listening", () => {
 wss.on("connection", (ws, req) => {
     
     let client = new WSClient({ws: ws});
+    client.sessionID = Math.random();
     clients.push(client);
 
     ws.on("message", data => {
@@ -107,7 +108,7 @@ wss.on("connection", (ws, req) => {
     })
 
     ws.on("close", () => {
-
+        clients = clients.filter(v => v.sessionID !== client.sessionID);
     })
 
 })
