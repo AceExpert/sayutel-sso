@@ -33,8 +33,8 @@ function getAuthUser(token) {
 
 function setUser(uid, {name, user_id, about, avatar}) {
     if(!name && !user_id && !about && !avatar) return;
-    userDB.prepare(`UPDATE users SET ${name? ("display_name=?" + ((user_id || about)? ', ' : ' ')) : " "}${user_id? "user_id=?" + (about? ', ' : ' ') : " "}${about? "about=? " : " "}WHERE uid=?;`)
-        .run(...([name, user_id, about, uid].filter(v => v)));
+    console.log(userDB.prepare(`UPDATE users SET ${name? ("display_name=?" + ((user_id || about)? ', ' : ' ')) : " "}${user_id? "user_id=?" + (about? ', ' : ' ') : " "}${about? "about=? " : " "}WHERE uid=?;`)
+        .run(...([name, user_id, about, uid].filter(v => v))));
     return 1
 } 
 
