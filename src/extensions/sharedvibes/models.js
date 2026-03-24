@@ -10,6 +10,7 @@ class WSClient {
         this.public_key = null;
         this.info = info;
         this.user_info = {};
+        this.sessionID = Math.round(Math.random() * 1000000)
     }
 }
 

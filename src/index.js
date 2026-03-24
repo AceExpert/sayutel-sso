@@ -304,7 +304,7 @@ app.post('/sv/user/get', rawMiddlware, resolveCookies, validateEncSession, (req,
 
     let userQ = JSON.parse(decrypt(req.body, session.key));
 
-    let v = sv.getUser(null, username);
+    let v = sv.getUser(userQ.email, userQ.user_id, userQ.uid);
 
     if(v) {
         res.send(encrypt(JSON.stringify({error: 0, data: v}), session.public_key));
@@ -318,17 +318,8 @@ app.post('/sv/user/set', rawMiddlware, resolveCookies, validateEncSession, (req,
 
     let session = req.sessionInfo;
 
-    let username = decrypt(req.body, session.key).toLowerCase().trim();
-
-    let v = sv.getUser(null, username);
-
-    if(v) {
-        res.send(encrypt(JSON.stringify({error: 0, data: v}), session.public_key));
-    } else {
-        res.send(encrypt(JSON.stringify({error: 1, msg: 'does not exist'}), session.public_key));
-    }
+    let update_data = JSON.parse(decrypt(req.body, session.key).toLowerCase().trim());
 })
-
 
 app.listen(5100, () => {
     console.log("Sayutel SSO Service is live @ localhost:5100");

@@ -4,7 +4,9 @@ const sqlite = require("node:sqlite");
 let {WSClient} = require("./models");
 let {encrypt, decrypt, generateKeys} = require("../../crypt");
 
-let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest, setUser} = require("./db");
+let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest, setUser,
+     createChannel, getChannels, getChannelMembers, getChannel
+} = require("./db");
 
 let wss = new WebSocketServer({
     port: 4200,
@@ -13,7 +15,7 @@ let wss = new WebSocketServer({
 let clients = [];
 
 function getClient(uid, user_id) {
-    return clients.find(cl => uid? (cl.uid === uid) : (cl.user_id === user_id));
+    return clients.find(cl => (uid? (cl.uid === uid) : (cl.user_id === user_id)));
 }
 
 wss.on("listening", () => {
@@ -23,7 +25,6 @@ wss.on("listening", () => {
 wss.on("connection", (ws, req) => {
     
     let client = new WSClient({ws: ws});
-    client.sessionID = Math.random();
     clients.push(client);
 
     ws.on("message", data => {
@@ -37,6 +38,7 @@ wss.on("connection", (ws, req) => {
             
             switch(fdata.type) {
                 case 0: {
+                    //ws auth
                     let auser = getAuthUser(fdata.token);
                     if(auser) {
                         client.email = auser.email;
@@ -46,12 +48,13 @@ wss.on("connection", (ws, req) => {
                         client.user_info = user;
                         ws.send(encrypt(JSON.stringify({'error': 0, 'data': user, 'id': fdata.id}), client.public_key));
                     } else {
-                        ws.send(encrypt(JSON.stringify({'error': 1, 'msg': 'unauthorized', 'id': fdata.id})))
+                        ws.send(encrypt(JSON.stringify({'error': 1, 'msg': 'unauthorized', 'id': fdata.id}), client.public_key))
                     }
                     break
                 }
 
                 case 1: {
+                    //send friend request
                     let req_cl = getClient(null, fdata.user_id);
                     let nsent = false;
 
@@ -68,6 +71,7 @@ wss.on("connection", (ws, req) => {
                 }
 
                 case 2: {
+                    //accept friend request
                     let req_cl = getClient(fdata.uid);
                     nsent = false;
 
@@ -84,20 +88,68 @@ wss.on("connection", (ws, req) => {
                 }
 
                 case 3: {
-                    if(fdata.uid) {
-                        let cl = getClient(fdata.uid);
-                        if(cl) {
-                            cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), cl.public_key))
-                        } else {
+                    //send message
+                    if(fdata.data.cid) {
+                        let members = getChannelMembers(fdata.data.cid);
+                        for(let memb of members) {
+                            let cl = getClient(memb.uid);
+                            if(cl) {
+                                cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), cl.public_key))
+                            } else {
 
+                            }
                         }
+                        
                     } else if (fdata.group_id) {
 
                     }
+                    break;
                 }
 
                 case 4: {
+                    //set user info
                     setUser(client.uid, fdata.data);
+                    client.user_info = getUser(client.uid);
+                    client.user_id = client.user_info.user_id;
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 5: {
+                    //create channel with user_ids
+                    let uids = [];
+                    for(let user_id of fdata.user_ids) {
+                        uids.push(getUser(null, user_id, null).uid);
+                    }
+                    let channel_id = createChannel(fdata.channel_type, fdata.channel_name, ...uids);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'channel_id': channel_id, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 6: {
+                    //get user info by user_id
+                    let users = [];
+                    for(let user_id of fdata.user_ids) {
+                        users.push(getUser(null, user_id, null));
+                    }
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'users': users, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 7: {
+                    //get channels info
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'channels': getChannels(client.uid), 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 8: {
+                    //get channel members
+                    let members = [];
+                    for(let ch_id of fdata.channel_ids) {
+                        members.push({'cid': ch_id, 'uids': getChannelMembers(ch_id)});
+                    }
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'members': members, 'id': fdata.id}), client.public_key));
+                    break;
                 }
             }
         }
