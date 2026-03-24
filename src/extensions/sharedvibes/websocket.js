@@ -108,6 +108,7 @@ wss.on("connection", (ws, req) => {
 
                 case 4: {
                     //set user info
+                    console.log(fdata);
                     setUser(client.uid, fdata.data);
                     client.user_info = getUser(client.uid);
                     client.user_id = client.user_info.user_id;
