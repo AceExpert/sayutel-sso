@@ -65,7 +65,7 @@ function createChannel(channel_type = 0, channel_name = null, ...uids) {
         }
     }
     let channelID = createUserID();
-    channelInfo.prepare("INSERT INTO channels VALUES (?, ?, ?, ?);").run(channelID, channel_type, uids.length, channel_type === 0? 2 : null, 
+    channelInfo.prepare("INSERT INTO channels VALUES (?, ?, ?, ?, ?);").run(channelID, channel_type, uids.length, channel_type === 0? 2 : null, 
         channel_name
     );
     for(let u of uids) {
