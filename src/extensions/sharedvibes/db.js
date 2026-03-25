@@ -61,7 +61,7 @@ function createChannel(channel_type = 0, channel_name = null, ...uids) {
     if(channel_type === 0) {
         let dm_with = getDMChannelWith(...uids);
         if(dm_with) {
-            return dm_with;
+            return dm_with.cid;
         }
     }
     let channelID = createUserID();

@@ -153,7 +153,7 @@ app.post('/verify', resolveCookies, validateEncSession, (req, res, next) => {
 app.post('/validate', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
     let session = req.sessionInfo;
 
-    let data = decrypt(req.body, session.key).trim();
+    let data = decrypt(req.body, session.key).trim().toLowerCase();
 
     if(!emailPat.test(data)) {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
@@ -172,7 +172,7 @@ app.post('/validate', rawMiddlware, resolveCookies, validateEncSession, (req, re
 app.post('/cytroid/wishlist/join', rawMiddlware, resolveCookies, validateEncSession, (req, res, next) => {
     let session = req.sessionInfo;
 
-    let data = decrypt(req.body, session.key).trim();
+    let data = decrypt(req.body, session.key).trim().toLowerCase();
 
     if(!emailPat.test(data)) {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
@@ -214,6 +214,7 @@ app.post('/shaleen/contact', rawMiddlware, resolveCookies, validateEncSession, (
     let session = req.sessionInfo;
 
     let data = JSON.parse(decrypt(req.body, session.key).trim());
+    data.email = data.email?.toLowerCase?.();
 
     if(!emailPat.test(data.email)) {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))
@@ -236,7 +237,7 @@ app.post('/sv/otp', rawMiddlware, resolveCookies, validateEncSession, (req, res,
 
     let session = req.sessionInfo;
 
-    let em = decrypt(req.body, session.key).trim();
+    let em = decrypt(req.body, session.key).trim().toLowerCase();
 
     if(!emailPat.test(em)) {
         res.send(encrypt(JSON.stringify({error: 1, msg: 'invalid email'}), session.public_key))

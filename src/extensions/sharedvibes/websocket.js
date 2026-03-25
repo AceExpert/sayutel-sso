@@ -151,6 +151,13 @@ wss.on("connection", (ws, req) => {
                     ws.send(encrypt(JSON.stringify({'error': 0, 'members': members, 'id': fdata.id}), client.public_key));
                     break;
                 }
+
+                case 9: {
+                    //create channel
+                    let chan_id = createChannel(fdata.channel_type, fdata.channel_name, ...fdata.uids);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'cid': chan_id}), client.public_key));
+                    break;
+                }
             }
         }
     })
