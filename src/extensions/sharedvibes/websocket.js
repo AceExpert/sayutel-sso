@@ -92,6 +92,7 @@ wss.on("connection", (ws, req) => {
                     if(fdata.data.cid) {
                         let members = getChannelMembers(fdata.data.cid);
                         for(let memb of members) {
+                            if(memb.uid === client.uid) continue;
                             let cl = getClient(memb.uid);
                             if(cl) {
                                 cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), cl.public_key))
