@@ -6,12 +6,21 @@ const friendsDB = new sqlite.DatabaseSync(dbDir + "friends.db");
 const authDB = new sqlite.DatabaseSync(dbDir + "auth.db");
 const channelDB = new sqlite.DatabaseSync(dbDir + "channels.db");
 const channelInfo = new sqlite.DatabaseSync(dbDir + "channelinfo.db");
+const forumInfo = new sqlite.DatabaseSync(dbDir + "foruminfo.db");
+const forumMembers = new sqlite.DatabaseSync(dbDir + "forummembers.db");
+const forumThreads = new sqlite.DatabaseSync(dbDir + "forumthreads.db");
+const forumMessages = new sqlite.DatabaseSync(dbDir + "forummessages.db");
 
 userDB.exec("CREATE TABLE if not exists users(uid, user_id, email, display_name, about, avatar);")
 friendsDB.exec("CREATE TABLE if not exists friends(uid, fid, rid, notif);")
 authDB.exec("CREATE TABLE if not exists users(uid, user_id, email, token);")
 channelDB.exec("CREATE TABLE if not exists channels(uid, cid);")
 channelInfo.exec("CREATE TABLE if not exists channels(cid, channel_type, member_count, max_member, channel_name);")
+forumInfo.exec("CREATE TABLE if not exists forums(fid, uid, public, member_count, name, description, tags, invite, icon);")
+forumMembers.exec("CREATE TABLE if not exists members(uid, fid);")
+forumThreads.exec("CREATE TABLE if not exists threads(tid, fid, name, description, tags, uid, upvotes, downvotes, locked);")
+forumMessages.exec("CREATE TABLE if not exists messages(mid, fid, tid, uid, content, reply_id, date, type, reply_degree);")
+
 
 function getUser(email, userid, uid) {
     let rec = null;
@@ -36,7 +45,7 @@ function setUser(uid, {name, user_id, about, avatar}) {
     userDB.prepare(`UPDATE users SET ${name? ("display_name=?" + ((user_id || about)? ', ' : ' ')) : " "}${user_id? "user_id=?" + (about? ', ' : ' ') : " "}${about? "about=? " : " "}WHERE uid=?;`)
         .run(...([name, user_id, about, uid].filter(v => v)));
     return 1
-} 
+}
 
 function getRelatedUserList(uid, type = 0) {
     switch(type) {
@@ -55,6 +64,64 @@ function getRelatedUserList(uid, type = 0) {
             return data;
         }
     }
+}
+
+function createForum(uid, {name, description, tags = [], invite, open = false}) {
+    let fid = createUserID();
+    forumInfo.prepare("INSERT into forums (name, description, tags, public, fid, uid, invite) VALUES (?, ?, ?, ?, ?, ?, ?);").run(name, description, JSON.stringify(tags), open, fid, uid, invite);
+    forumMembers.prepare("INSERT into members VALUES (?, ?);").run(uid, fid);
+    return fid;
+}
+
+function joinForum(fid, uid) {
+    forumMembers.prepare("INSERT into members VALUES (?, ?);").run(uid, fid);
+}
+
+function leaveForum(fid, uid) {
+    forumMembers.prepare("DELETE FROM members where uid=? AND fid=?;").run(uid, fid);
+}
+
+function getForum(fids) {
+    let forums = [];
+    for(let fid of fids) {
+        forums.push(
+            forumInfo.prepare("SELECT * from forums where fid=?;").get(fid)
+        )
+    }
+    return forums; 
+}
+
+function getForums(uid) {
+    let memInfo = forumMembers.prepare("SELECT fid from members where uid=?;").all(uid);
+    return getForum(memInfo.map(m => m.fid));
+}
+
+function createThread({name, description, tags = [], fid, uid, locked = false}) {
+    let tid = createUserID();
+    forumThreads.prepare("INSERT INTO threads (tid, fid, uid, name, description, tags, locked) VALUES (?, ?, ?, ?, ?, ?, ?);").run(tid, fid, uid, name, description, tags, locked);
+    return tid;
+}
+
+function sendThreadMessage({mid, tid, fid, uid, content, reply_id, date, type, reply_degree = 0}) {
+    if(reply_id) {
+        let repl_msg = getMessageByID(reply_id);
+        reply_degree = repl_msg.reply_degree;
+        reply_degree++;
+    }
+    forumMessages.prepare("INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?, ?);").run(mid, fid, tid, uid, content, reply_id, date, type, reply_degree);
+    return
+}
+
+function getThreads(fid) {
+    return forumThreads.prepare("SELECT * from threads WHERE fid=?;").all(fid);
+}
+
+function getMessageByID(mid) {
+    return forumMessages.prepare("SELECT * from messages WHERE mid=?;").get(mid);
+}
+
+function getMessages(tid) {
+    return forumMessages.prepare("SELECT * from messages WHERE tid=?;").all(tid);
 }
 
 function createChannel(channel_type = 0, channel_name = null, ...uids) {
@@ -141,5 +208,6 @@ function createUserID() {
 export {userDB, friendsDB, authDB, getAuthUser, getUser, 
         getRelatedUserList, createUserID, sendFriendRequest, acceptFriendRequest, setUser,
         createChannel, getChannels, getChannel, getChannelMembers, getDMChannels,
-        getDMChannelWith
+        getDMChannelWith, createForum, joinForum, leaveForum, getForum, getForums,
+        createThread, sendThreadMessage, getThreads, getMessageByID, getMessages,
     }

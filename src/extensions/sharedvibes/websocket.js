@@ -5,7 +5,9 @@ let {WSClient} = require("./models");
 let {encrypt, decrypt, generateKeys} = require("../../crypt");
 
 let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest, setUser,
-     createChannel, getChannels, getChannelMembers, getChannel
+     createChannel, getChannels, getChannelMembers, getChannel,
+     createForum, createThread, getMessages, getMessageByID, joinForum, leaveForum, getThreads,
+     getForum, getForums, sendThreadMessage
 } = require("./db");
 
 let wss = new WebSocketServer({
@@ -100,6 +102,7 @@ wss.on("connection", (ws, req) => {
 
                             }
                         }
+                        ws.send(encrypt(JSON.stringify({'error': 0, 'id': fdata.id}), client.public_key));
                         
                     } else if (fdata.group_id) {
 
@@ -157,6 +160,41 @@ wss.on("connection", (ws, req) => {
                     //create channel with uids
                     let chan_id = createChannel(fdata.channel_type, fdata.channel_name, ...fdata.uids);
                     ws.send(encrypt(JSON.stringify({'error': 0, 'cid': chan_id, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 10: {
+                    //create forum
+                    let fid = createForum(client.uid, fdata.data);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'fid': fid, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 11: {
+                    //create thread
+                    let tid = createThread({...(fdata.data), uid: client.uid});
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'tid': tid, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 12: {
+                    //get forums
+                    let f = getForums(client.uid);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'forums': f, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 13: {
+                    //get threads
+                    let t = getThreads(fdata.fid);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'threads': t, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 14: {
+                    //get messages
+                    let m = getMessages(fdata.tid);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'messages': m, 'id': fdata.id}), client.public_key));
                     break;
                 }
             }
