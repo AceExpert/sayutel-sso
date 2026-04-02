@@ -66,7 +66,7 @@ function getRelatedUserList(uid, type = 0) {
     }
 }
 
-function createForum(uid, {name, description, tags = [], invite, open = false}) {
+function createForum(uid, {name, description, tags = [], invite, open = 0}) {
     let fid = createUserID();
     forumInfo.prepare("INSERT into forums (name, description, tags, public, fid, uid, invite) VALUES (?, ?, ?, ?, ?, ?, ?);").run(name, description, JSON.stringify(tags), open, fid, uid, invite);
     forumMembers.prepare("INSERT into members VALUES (?, ?);").run(uid, fid);
@@ -96,7 +96,7 @@ function getForums(uid) {
     return getForum(memInfo.map(m => m.fid));
 }
 
-function createThread({name, description, tags = [], fid, uid, locked = false}) {
+function createThread({name, description, tags = [], fid, uid, locked = 0}) {
     let tid = createUserID();
     forumThreads.prepare("INSERT INTO threads (tid, fid, uid, name, description, tags, locked) VALUES (?, ?, ?, ?, ?, ?, ?);").run(tid, fid, uid, name, description, tags, locked);
     return tid;
