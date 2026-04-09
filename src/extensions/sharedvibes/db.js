@@ -113,7 +113,11 @@ function sendThreadMessage({mid, tid, fid, uid, content, reply_id = null, date, 
 }
 
 function getThreads(fid) {
-    return forumThreads.prepare("SELECT * from threads WHERE fid=?;").all(fid);
+    let threads = forumThreads.prepare("SELECT * from threads WHERE fid=?;").all(fid);
+    for(let i = 0; i < threads.length; i++) {
+        threads[i].user = getUser(null, null, threads[i].uid);
+    }
+    return threads
 }
 
 function getMessageByID(mid) {
