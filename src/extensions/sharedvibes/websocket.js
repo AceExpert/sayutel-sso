@@ -7,7 +7,7 @@ let {encrypt, decrypt, generateKeys} = require("../../crypt");
 let {getAuthUser, getUser, sendFriendRequest, acceptFriendRequest, setUser,
      createChannel, getChannels, getChannelMembers, getChannel,
      createForum, createThread, getMessages, getMessageByID, joinForum, leaveForum, getThreads,
-     getForum, getForums, sendThreadMessage
+     getForum, getForums, sendThreadMessage, getForumMemberIDs, getAllForums
 } = require("./db");
 
 let wss = new WebSocketServer({
@@ -199,6 +199,31 @@ wss.on("connection", (ws, req) => {
                     //get messages
                     let m = getMessages(fdata.tid);
                     ws.send(encrypt(JSON.stringify({'error': 0, 'messages': m, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 15: {
+                    //send message
+                    sendThreadMessage({...(fdata.data), uid: client.uid});
+                    let uids = getForumMemberIDs(fdata.data.fid);
+                    for(let uid of uids) {
+                        if(uid === client.uid) continue;
+                        let cl = getClient(uid);
+                        if(cl) {
+                            try {
+                                cl.ws.send(encrypt(JSON.stringify({'type': 15, 'uid': client.uid, 'user': client.user_info, 'data': fdata.data}), cl.public_key))
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }
+                    }
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 16: {
+                    //get all forums
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'forums': getAllForums(), 'id': fdata.id}), client.public_key));
                     break;
                 }
             }

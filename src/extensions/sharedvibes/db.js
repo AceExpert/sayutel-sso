@@ -81,12 +81,17 @@ function leaveForum(fid, uid) {
     forumMembers.prepare("DELETE FROM members where uid=? AND fid=?;").run(uid, fid);
 }
 
+function getForumMemberIDs(fid) {
+    let membs = forumMembers.prepare("SELECT * FROM members where fid=?;").all(fid);
+    return membs.map(m => m.uid);
+}
+
 function getForum(fids) {
     let forums = [];
     for(let fid of fids) {
-        forums.push(
-            forumInfo.prepare("SELECT * from forums where fid=?;").get(fid)
-        )
+        let f = forumInfo.prepare("SELECT * from forums where fid=?;").get(fid);
+        f.user_count = getForumMemberIDs(fid).length;
+        forums.push(f)
     }
     return forums; 
 }
@@ -96,13 +101,21 @@ function getForums(uid) {
     return getForum(memInfo.map(m => m.fid));
 }
 
+function getAllForums(size = 0) {
+    let forums = forumInfo.prepare("SELECT * from forums;").all();
+    for(let i = 0; i < forums.length; i++) {
+        forums[i].user_count = getForumMemberIDs(forums[i].fid).length;
+    }
+    return forums
+}
+
 function createThread({name, description, tags = [], fid, uid, locked = 0}) {
     let tid = createUserID();
     forumThreads.prepare("INSERT INTO threads (tid, fid, uid, name, description, tags, locked) VALUES (?, ?, ?, ?, ?, ?, ?);").run(tid, fid, uid, name, description, JSON.stringify(tags), locked);
     return tid;
 }
 
-function sendThreadMessage({mid, tid, fid, uid, content, reply_id = null, date, type, reply_degree = 0}) {
+function sendThreadMessage({mid, tid, fid, uid, content, reply_id = null, date, type = 0, reply_degree = 0}) {
     if(reply_id) {
         let repl_msg = getMessageByID(reply_id);
         reply_degree = repl_msg.reply_degree;
@@ -125,7 +138,11 @@ function getMessageByID(mid) {
 }
 
 function getMessages(tid) {
-    return forumMessages.prepare("SELECT * from messages WHERE tid=?;").all(tid);
+    let msgs = forumMessages.prepare("SELECT * from messages WHERE tid=?;").all(tid);
+    for(let i = 0; i < msgs.length; i++) {
+        msgs[i].user = getUser(null, null, msgs[i].uid);
+    };
+    return msgs;
 }
 
 function createChannel(channel_type = 0, channel_name = null, ...uids) {
@@ -214,4 +231,5 @@ export {userDB, friendsDB, authDB, getAuthUser, getUser,
         createChannel, getChannels, getChannel, getChannelMembers, getDMChannels,
         getDMChannelWith, createForum, joinForum, leaveForum, getForum, getForums,
         createThread, sendThreadMessage, getThreads, getMessageByID, getMessages,
+        getForumMemberIDs, getAllForums
     }
