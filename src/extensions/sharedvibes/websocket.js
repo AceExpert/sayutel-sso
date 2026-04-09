@@ -225,7 +225,7 @@ wss.on("connection", (ws, req) => {
                     //get all forums
                     let f = getAllForums();
                     for(let form of f) {
-                        if(getForumMemberIDs(f.fid).includes(client.uid)) {
+                        if(getForumMemberIDs(form.fid).includes(client.uid)) {
                             form.joined = true;
                         }
                     }
