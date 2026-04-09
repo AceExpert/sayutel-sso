@@ -229,7 +229,7 @@ wss.on("connection", (ws, req) => {
                             form.joined = true;
                         }
                     }
-                    ws.send(encrypt(JSON.stringify({'error': 0, 'forums': getAllForums(), 'id': fdata.id}), client.public_key));
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'forums': f, 'id': fdata.id}), client.public_key));
                     break;
                 }
 
