@@ -121,7 +121,7 @@ function sendThreadMessage({mid, tid, fid, uid, content, reply_id = null, date, 
         reply_degree = repl_msg.reply_degree;
         reply_degree++;
     }
-    forumMessages.prepare("INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?, ?);").run(mid, fid, tid, uid, content, reply_id, date, type, reply_degree);
+    forumMessages.prepare("INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);").run(mid, fid, tid, uid, content, reply_id, date, type, reply_degree);
     return
 }
 
