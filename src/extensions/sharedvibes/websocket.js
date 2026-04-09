@@ -223,7 +223,27 @@ wss.on("connection", (ws, req) => {
 
                 case 16: {
                     //get all forums
+                    let f = getAllForums();
+                    for(let form of f) {
+                        if(getForumMemberIDs(f.fid).includes(client.uid)) {
+                            form.joined = true;
+                        }
+                    }
                     ws.send(encrypt(JSON.stringify({'error': 0, 'forums': getAllForums(), 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 17: {
+                    //join forum
+                    joinForum(fdata.fid, client.uid);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'id': fdata.id}), client.public_key));
+                    break;
+                }
+
+                case 18: {
+                    //leave forum
+                    leaveForum(fdata.fid, client.uid);
+                    ws.send(encrypt(JSON.stringify({'error': 0, 'id': fdata.id}), client.public_key));
                     break;
                 }
             }
