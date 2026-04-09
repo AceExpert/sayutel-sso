@@ -98,7 +98,7 @@ function getForums(uid) {
 
 function createThread({name, description, tags = [], fid, uid, locked = 0}) {
     let tid = createUserID();
-    forumThreads.prepare("INSERT INTO threads (tid, fid, uid, name, description, tags, locked) VALUES (?, ?, ?, ?, ?, ?, ?);").run(tid, fid, uid, name, description, tags, locked);
+    forumThreads.prepare("INSERT INTO threads (tid, fid, uid, name, description, tags, locked) VALUES (?, ?, ?, ?, ?, ?, ?);").run(tid, fid, uid, name, description, JSON.stringify(tags), locked);
     return tid;
 }
 

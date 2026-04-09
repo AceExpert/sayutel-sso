@@ -97,7 +97,11 @@ wss.on("connection", (ws, req) => {
                             if(memb.uid === client.uid) continue;
                             let cl = getClient(memb.uid);
                             if(cl) {
-                                cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), cl.public_key))
+                                try {
+                                    cl.ws.send(encrypt(JSON.stringify({'type': 3, 'uid': client.uid, 'user_data': client.user_info, 'data': fdata.data}), cl.public_key))
+                                } catch (e) {
+                                    console.error(e)
+                                }
                             } else {
 
                             }
